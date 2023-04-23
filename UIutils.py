@@ -10,7 +10,7 @@ from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.common.by import By
 import sys
 sys.path.append('.')
-
+#config为自己的配置文件
 import config
 
 
@@ -51,6 +51,7 @@ class DriverTool:
             # 加启动配置
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_experimental_option('detach',True) #不自动关闭浏览器
+            #配置自己的config文件中的headers
             chrome_options.add_argument('--user-agent='+config.HEADERS["User-Agent"])  # 设置请求头的User-Agent
             #chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])#禁止打印日志
             #chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])#实现了规避监测
