@@ -1,26 +1,25 @@
-from helium  import *
+from helium import *
 import time
 import json
 from PIL import Image
 import pytesseract
 from appium import webdriver as appdriver
-from selenium import webdriver 
+from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.common.by import By
 import sys
 sys.path.append('.')
-#config为自己的配置文件
+# config为自己的配置文件
 #import config
 
 
-
-
 class AppDriverTool:
-    #app操作driver
+    # app操作driver
     _driver = None
+
     @classmethod
-    def get_driver(cls,app_pack:str='com.android.launcher3',appact:str='.launcher3.Launcher')->appdriver:
+    def get_driver(cls, app_pack: str = 'com.android.launcher3', appact: str = '.launcher3.Launcher') -> appdriver:
         '''
         app获取driver
         :param app_pack: app包名
@@ -38,7 +37,8 @@ class AppDriverTool:
                 # 界面名
                 appActivity=appact
             )
-            cls._driver = appdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_capabilities=desired_caps)
+            cls._driver = appdriver.Remote(
+                'http://127.0.0.1:4723/wd/hub', desired_capabilities=desired_caps)
             return cls._driver
         else:
             return cls._driver
@@ -52,11 +52,13 @@ class AppDriverTool:
             cls._driver.quit()
             cls._driver = None
 
+
 class DriverTool:
-    #网页操作driver
-    driver=None
+    # 网页操作driver
+    driver = None
+
     @classmethod
-    def create_driver(cls)->webdriver:
+    def create_driver(cls) -> webdriver:
         '''
         创建driver
         :return:driver
@@ -64,30 +66,35 @@ class DriverTool:
         if cls.driver is None:
             # 加启动配置
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_experimental_option('detach',True) #不自动关闭浏览器
-            #配置自己的config文件中的headers
-            #chrome_options.add_argument('--user-agent='+config.HEADERS["User-Agent"])  # 设置请求头的User-Agent
-            #chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])#禁止打印日志
-            #chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])#实现了规避监测
-            chrome_options.add_experimental_option("excludeSwitches",['enable-automation','enable-logging'])#上面两个可以同时设置
-            #chrome_options.add_argument('--headless') # 无头模式
+            chrome_options.add_experimental_option('detach', True)  # 不自动关闭浏览器
+            # 配置自己的config文件中的headers
+            # chrome_options.add_argument('--user-agent='+config.HEADERS["User-Agent"])  # 设置请求头的User-Agent
+            # chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])#禁止打印日志
+            # chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])#实现了规避监测
+            chrome_options.add_experimental_option(
+                "excludeSwitches", ['enable-automation', 'enable-logging'])  # 上面两个可以同时设置
+            # chrome_options.add_argument('--headless') # 无头模式
             chrome_options.add_argument('--disable-gpu')  # 禁用GPU加速
-            chrome_options.add_argument('--start-maximized')#最大化
-            #chrome_options.add_argument('--disable-extensions')  # 禁用扩展
-            chrome_options.add_argument('--ignore-certificate-errors')  # 禁用扩展插件并实现窗口最大化
-            #chrome_options.add_argument('--window-size=1280x1024')  # 设置浏览器分辨率（窗口大小）
-            #chrome_options.add_argument('--hide-scrollbars')  # 隐藏滚动条, 应对一些特殊页面
-            #chrome_options.add_argument('--disable-javascript')  # 禁用javascript
-            #chrome_options.add_argument('--blink-settings=imagesEnabled=false')  # 不加载图片, 提升速度
-            #chrome_options.add_argument('--disable-software-rasterizer')  # 禁用 3D 软件光栅化器
-            chrome_options.add_argument('--incognito')#无痕隐身模式
-            chrome_options.add_argument("disable-cache")#禁用缓存
-            chrome_options.add_argument('--disable-infobars')  # 禁用浏览器正在被自动化程序控制的提示
-            chrome_options.add_argument('log-level=3')#INFO = 0 WARNING = 1 LOG_ERROR = 2 LOG_FATAL = 3 default is 0
+            chrome_options.add_argument('--start-maximized')  # 最大化
+            # chrome_options.add_argument('--disable-extensions')  # 禁用扩展
+            chrome_options.add_argument(
+                '--ignore-certificate-errors')  # 禁用扩展插件并实现窗口最大化
+            # chrome_options.add_argument('--window-size=1280x1024')  # 设置浏览器分辨率（窗口大小）
+            # chrome_options.add_argument('--hide-scrollbars')  # 隐藏滚动条, 应对一些特殊页面
+            # chrome_options.add_argument('--disable-javascript')  # 禁用javascript
+            # chrome_options.add_argument('--blink-settings=imagesEnabled=false')  # 不加载图片, 提升速度
+            # chrome_options.add_argument('--disable-software-rasterizer')  # 禁用 3D 软件光栅化器
+            chrome_options.add_argument('--incognito')  # 无痕隐身模式
+            chrome_options.add_argument("disable-cache")  # 禁用缓存
+            chrome_options.add_argument(
+                '--disable-infobars')  # 禁用浏览器正在被自动化程序控制的提示
+            # INFO = 0 WARNING = 1 LOG_ERROR = 2 LOG_FATAL = 3 default is 0
+            chrome_options.add_argument('log-level=3')
             cls.driver = webdriver.Chrome(chrome_options=chrome_options)
             return cls.driver
         else:
             return cls.driver
+
     @classmethod
     def close_driver(cls):
         '''
@@ -95,20 +102,22 @@ class DriverTool:
         '''
         if cls.driver:
             cls.driver.close()
-            cls.driver=None
+            cls.driver = None
 
 # helium处理
+
+
 class HeliumTool:
-    #helium定位元素
+    # helium定位元素
     @classmethod
-    def s(cls,value:str,**local)->S.web_element:
+    def s(cls, value: str, **local) -> S.web_element:
         '''
         定位app中的元素
         :param value:定位方式对应的值
         :return: 将元素进行返回
         '''
         try:
-            element=S(value)
+            element = S(value)
             # else:
             #     for direction in local.keys():
             #         if direction=='below':
@@ -121,11 +130,11 @@ class HeliumTool:
             #             element=S(value,to_left_of=local[direction])
             return element
         except Exception as e:
-            print('-------------------->定位不到元素，出错的语句是',value)
+            print('-------------------->定位不到元素，出错的语句是', value)
 
-    #helium點擊
+    # helium點擊
     @classmethod
-    def heclick(cls,element):
+    def heclick(cls, element):
         '''
         在输入框中输入数据
         :param element: 元素
@@ -135,22 +144,22 @@ class HeliumTool:
         except Exception as e:
             print(f'------------------------->{element}当前元素未获取')
 
-    #helium輸入
+    # helium輸入
     @classmethod
-    def hewrite(cls,value,element):
+    def hewrite(cls, value, element):
         '''
         在输入框中输入数据
         :param value: 输入值
         :param element: 元素
         '''
         try:
-            write(value,into=element)
+            write(value, into=element)
         except Exception as e:
             print(f'------------------------->{element}当前元素未获取')
 
-    #helium獲取元素屬性
+    # helium獲取元素屬性
     @classmethod
-    def get_ele_attribute(cls,element,att):
+    def get_ele_attribute(cls, element, att):
         '''
         获取元素的属性
         :param element:要获取属性的元素
@@ -158,16 +167,16 @@ class HeliumTool:
         :return:获取属性的值
         '''
         try:
-            if att=='text':
+            if att == 'text':
                 return element.web_element.text
             else:
                 return element.web_element.get_attribute(att)
         except Exception as e:
             print(f'------------------------->{element}当前元素未获取')
 
-    #helium悬浮
+    # helium悬浮
     @classmethod
-    def hehover(cls,element):
+    def hehover(cls, element):
         '''
         helium鼠标悬浮
         :param element:要悬浮的属性
@@ -178,8 +187,10 @@ class HeliumTool:
             print(f'------------------------->{element}当前元素未获取')
 
 # selenium和appium处理
+
+
 class SeleniumTool:
-    def get_single_element(cls,driver,style,value):
+    def get_single_element(cls, driver, style, value):
         '''
         定位app中的元素
         :param driver: appium操作句柄
@@ -189,14 +200,15 @@ class SeleniumTool:
         '''
 
         try:
-            element = WebDriverWait(driver,10).until(lambda x:x.find_element(style,value))
+            element = WebDriverWait(driver, 10).until(
+                lambda x: x.find_element(style, value))
             return element
         except Exception as e:
-            print('-------------------->定位不到元素，出错的语句是',value)
+            print('-------------------->定位不到元素，出错的语句是', value)
             element = None
             return element
 
-    def get_elements(cls,driver,style,value):
+    def get_elements(cls, driver, style, value):
         '''
         获取多个元素
         :param driver:
@@ -205,15 +217,15 @@ class SeleniumTool:
         :return: 返回的是多个元素组成的列表
         '''
         try:
-            element = WebDriverWait(driver,10).until(lambda x:x.find_elements(style,value))
+            element = WebDriverWait(driver, 10).until(
+                lambda x: x.find_elements(style, value))
             return element
         except Exception as e:
-            print('-------------------->定位不到元素，出错的语句是',value)
+            print('-------------------->定位不到元素，出错的语句是', value)
             element = None
             return element
 
-
-    def input_text(cls,element,data):
+    def input_text(cls, element, data):
         '''
         在输入框中输入数据
         :param element: 元素
@@ -225,8 +237,7 @@ class SeleniumTool:
         else:
             print('------------------------->当前元素未获取')
 
-
-    def click_element(cls,element):
+    def click_element(cls, element):
         '''
         点击元素
         :param element: 元素
@@ -237,13 +248,16 @@ class SeleniumTool:
             print('------------------------->当前元素未获取')
 
 # app高级手势操作
+
+
 class HandAction:
     def back_prepage(driver):
         '''
         返回上一级
         :param driver: driver
         '''
-        element = SeleniumTool.get_single_element(driver,By.XPATH,"//*[@content-desc='转到上一层级']")
+        element = SeleniumTool.get_single_element(
+            driver, By.XPATH, "//*[@content-desc='转到上一层级']")
         if element:
             element.click()
 
@@ -251,11 +265,12 @@ class HandAction:
             print('----------->返回上一页失败，返回键定位不到')
 
     # app滑动
-    def handler_swipe(driver,start_x,start_y,end_x,end_y):
-        driver.swipe(start_x,start_y,end_x,end_y)
+    def handler_swipe(driver, start_x, start_y, end_x, end_y):
+        driver.swipe(start_x, start_y, end_x, end_y)
     # 长按
+
     @classmethod
-    def handler_long_press(cls,location_x,location_y,press_time=1000):
+    def handler_long_press(cls, location_x, location_y, press_time=1000):
         '''
         长按操作
         :param location_x: 元素的坐标  x
@@ -264,13 +279,14 @@ class HandAction:
         :return:None
         '''
         ta = TouchAction(AppDriverTool.get_driver())
-        ta.long_press(x=location_x,y=location_y,duration=press_time).perform()
+        ta.long_press(x=location_x, y=location_y,
+                      duration=press_time).perform()
         # ta.press(x=150, y=330).wait(1000).release().perform()
 
-
     # 轻敲
+
     @classmethod
-    def handler_tap(cls,location_x,location_y):
+    def handler_tap(cls, location_x, location_y):
         '''
         轻敲操作
         :param location_x: 元素的位置 x
@@ -280,16 +296,17 @@ class HandAction:
         ta = TouchAction(AppDriverTool.get_driver())
         ta.tap(x=location_x, y=location_y).perform()
 
-
     # 长按移动
+
     @classmethod
-    def handler_pressmove(cls,start_x,start_y,target_x,target_y):
+    def handler_pressmove(cls, start_x, start_y, target_x, target_y):
         ta = TouchAction(AppDriverTool.get_driver())
-        ta.press(x=start_x, y=start_y).move_to(x=target_x, y=target_y).release().perform()
+        ta.press(x=start_x, y=start_y).move_to(
+            x=target_x, y=target_y).release().perform()
 
     # 一边滑动，一遍寻找目标元素
     @classmethod
-    def swipe_find_element(cls,element,style,value):
+    def swipe_find_element(cls, element, style, value):
         '''
         对于元素的滑动寻找
         :param element: 元素
@@ -313,11 +330,12 @@ class HandAction:
             page = driver.page_source  # 记录查找前的页面资源,通过对比页面资源来退出死循环
             try:
                 # 如果有找到对应的元素那么点击并返回
-                SeleniumTool.get_single_element(driver,style,value)
+                SeleniumTool.get_single_element(driver, style, value)
                 return True
             except Exception as e:
                 print("没有找到该元素！")
-            driver.swipe(start_x, y, end_x, y, duration=1000)  # 没有找到元素，那么滑屏后再对比并重新查找
+            # 没有找到元素，那么滑屏后再对比并重新查找
+            driver.swipe(start_x, y, end_x, y, duration=1000)
             time.sleep(1)
             if page == driver.page_source:
                 print("滑屏操作完成且没有找到元素信息")
@@ -329,7 +347,7 @@ class HandleSys:
 
     # 设置网络
     @classmethod
-    def change_network(cls,ntype=2):
+    def change_network(cls, ntype=2):
         '''
          | Value (Alias)      | Data | Wifi | Airplane Mode |
             +====================+======+======+===============+
@@ -350,7 +368,7 @@ class HandleSys:
 
     # 模拟键盘操作
     @classmethod
-    def system_keys(cls,num):
+    def system_keys(cls, num):
         '''
         模拟系统的操作
         HOME  3
@@ -367,7 +385,7 @@ class HandleSys:
         AppDriverTool.get_driver().open_notifications()
 
     @classmethod
-    def handler_swipe(cls,direction,count=1):
+    def handler_swipe(cls, direction, count=1):
         # 封装滑屏操作方法
         driver = AppDriverTool.get_driver()
         w = driver.get_window_size()["width"]  # 获取手机屏幕的宽度
@@ -389,7 +407,7 @@ class HandleSys:
 class JsonTool:
 
     @classmethod
-    def get_testcase_data(cls,file_path):
+    def get_testcase_data(cls, file_path):
         '''
         实现读取外部数据，拼接成[(),(),()]
         :return:  需要将拼接的数据做返回，让测试用例使用
@@ -409,7 +427,7 @@ class JsonTool:
 
 
 # 获取toast信息
-def toast_info_pic(pic_path,left, upper, right, lower):
+def toast_info_pic(pic_path, left, upper, right, lower):
     '''
     获取toast消息，返回文本内容，配合使用
     :param pic_path: 获取的文件存储名，以png后缀
@@ -422,20 +440,23 @@ def toast_info_pic(pic_path,left, upper, right, lower):
     path = './img/login_toast_png/'+pic_path
     AppDriverTool.get_driver().get_screenshot_as_file(path)
     img = Image.open(path)
-    new_img = img.crop((left,upper,right,lower))
+    new_img = img.crop((left, upper, right, lower))
     new_img.save(path)
 
     # text = pytesseract.image_to_string(Image.open(path), lang='chi_sim')
-    text = ''.join(pytesseract.image_to_string(Image.open(path), lang='chi_sim').split(' '))
+    text = ''.join(pytesseract.image_to_string(
+        Image.open(path), lang='chi_sim').split(' '))
     print('-------------->获取到的字符串是', text)
     if "!" in text:
 
-        return text.replace('!','！').strip()
+        return text.replace('!', '！').strip()
     else:
         return text.strip()
 
-def toast_info(driver,pic_path,left, upper, right, lower):
-    common_login_element = SeleniumTool.get_single_element(driver, By.XPATH, "//android.widget.Toast")
+
+def toast_info(driver, pic_path, left, upper, right, lower):
+    common_login_element = SeleniumTool.get_single_element(
+        driver, By.XPATH, "//android.widget.Toast")
     if common_login_element:
         return common_login_element.text
     else:
@@ -444,7 +465,8 @@ def toast_info(driver,pic_path,left, upper, right, lower):
         img = Image.open(path)
         new_img = img.crop((left, upper, right, lower))
         new_img.save(path)
-        text = ''.join(pytesseract.image_to_string(Image.open(path), lang='chi_sim').split(' '))
+        text = ''.join(pytesseract.image_to_string(
+            Image.open(path), lang='chi_sim').split(' '))
         print('-------------->获取到的字符串是', text)
         if "!" in text:
 
@@ -452,7 +474,8 @@ def toast_info(driver,pic_path,left, upper, right, lower):
         else:
             return text.strip()
 
-def get_target_pic(xmin:int ,ymin:int, xmax:int ,ymax:int,img_path:str,new_img_path:str,driver:object):
+
+def get_target_pic(xmin: int, ymin: int, xmax: int, ymax: int, img_path: str, new_img_path: str, driver: object):
     '''
     当前函数用于使用selenium截图页面，进行截图使用
     :param xmin: 裁剪位置
@@ -475,7 +498,7 @@ def get_target_pic(xmin:int ,ymin:int, xmax:int ,ymax:int,img_path:str,new_img_p
     return new_img_path
 
 
-def pic_img(pic_path:str):
+def pic_img(pic_path: str):
     '''
     获取图片上的中文
     :param pic_path: 图片路径
@@ -502,12 +525,11 @@ def create_logger(log_name):
     import os
     from logging.handlers import RotatingFileHandler
 
-
     # 日志
     path = os.path.dirname(os.path.abspath(__name__))
     project_path = os.path.dirname(path)
 
-    log_path = os.path.join(project_path,'log')
+    log_path = os.path.join(project_path, 'log')
 
     logger = logging.getLogger(log_name)
     logger.setLevel('INFO')
@@ -515,9 +537,10 @@ def create_logger(log_name):
     log_formate = logging.Formatter(fmt)
 
     # 日志写入路径
-    file_name = os.path.join(log_path,log_name)
+    file_name = os.path.join(log_path, log_name)
 
-    file_handler = RotatingFileHandler(file_name,maxBytes=20*1024*1024,backupCount=10,encoding='utf-8')
+    file_handler = RotatingFileHandler(
+        file_name, maxBytes=20*1024*1024, backupCount=10, encoding='utf-8')
     file_handler.setLevel('INFO')
     file_handler.setFormatter(log_formate)
 
@@ -530,13 +553,7 @@ def create_logger(log_name):
 
     return logger
 
+
 if __name__ == '__main__':
     log = create_logger('case.log')
     log.info('呵呵呵呵')
-
-
-
-
-
-
-
