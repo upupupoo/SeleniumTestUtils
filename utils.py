@@ -264,18 +264,23 @@ class RequestProxy(object):
         kwargs.update({"headers": cls.headers})
         return request('delete', url, **kwargs)
 
-# 抽取unittest中的参数化所需要的数据
-class UnittestParamData():
-
+# 抽取pytest中的参数化所需要的数据
+class PytestParamData():
+    #抽取json的前i列数据
     @classmethod
-    def data_info(cls):
-        data_path = './data/login_data.json'
-        data = HandlerJson.read_json(data_path)
+    def data_info(cls,json_path,i=None):
+        data = HandlerJson.read_json(json_path)
         param_data_list = []
-        print('*' * 50)
-        for item in data:
-            each_data = tuple(item.values())[0:4]
-            param_data_list.append(each_data)
+        if i:
+            print('*' * 50)
+            for item in data:
+                each_data = tuple(item.values())[0:i]
+                param_data_list.append(each_data)
+        else:
+           for item in data:
+                idata = {key: value for key, value in item.items() if key != 'name'}
+                param_data_list.append([item.get('name'), idata])
+
         return param_data_list
 
 class HandlerCsv(object):
