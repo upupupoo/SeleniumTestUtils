@@ -11,16 +11,22 @@ from selenium.webdriver.common.by import By
 import sys
 sys.path.append('.')
 #config为自己的配置文件
-import config
+#import config
 
 
 
 
 class AppDriverTool:
-
+    #app操作driver
     _driver = None
     @classmethod
-    def get_driver(cls,app_pack='com.android.launcher3',appact='.launcher3.Launcher'):
+    def get_driver(cls,app_pack:str='com.android.launcher3',appact:str='.launcher3.Launcher')->appdriver:
+        '''
+        app获取driver
+        :param app_pack: app包名
+        :param appact:Activity名
+        :return: driver
+        '''
         if cls._driver is None:
             desired_caps = dict(
                 platformName='Android',  # 平台，是Android还是IOS
@@ -39,20 +45,28 @@ class AppDriverTool:
 
     @classmethod  # 类方法修改的是类属性
     def quit_driver(cls):
+        '''
+        退出driver
+        '''
         if cls._driver:
             cls._driver.quit()
             cls._driver = None
 
 class DriverTool:
+    #网页操作driver
     driver=None
     @classmethod
-    def create_driver(cls):
+    def create_driver(cls)->webdriver:
+        '''
+        创建driver
+        :return:driver
+        '''
         if cls.driver is None:
             # 加启动配置
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_experimental_option('detach',True) #不自动关闭浏览器
             #配置自己的config文件中的headers
-            chrome_options.add_argument('--user-agent='+config.HEADERS["User-Agent"])  # 设置请求头的User-Agent
+            #chrome_options.add_argument('--user-agent='+config.HEADERS["User-Agent"])  # 设置请求头的User-Agent
             #chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])#禁止打印日志
             #chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])#实现了规避监测
             chrome_options.add_experimental_option("excludeSwitches",['enable-automation','enable-logging'])#上面两个可以同时设置
@@ -76,149 +90,169 @@ class DriverTool:
             return cls.driver
     @classmethod
     def close_driver(cls):
-        if cls.driver is not None:
+        '''
+        退出driver
+        '''
+        if cls.driver:
             cls.driver.close()
             cls.driver=None
 
 # helium处理
-#helium定位元素
-def s(value,**local):
-    '''
-    定位app中的元素
-    :param value:方式对应的值
-    :return: 将元素进行返回
-    '''
-    try:
-        element=S(value)
-        # else:
-        #     for direction in local.keys():
-        #         if direction=='below':
-        #             element=S(value,below=local[direction])
-        #         elif direction=='above':
-        #             element=S(value,above=local[direction])
-        #         elif direction=='to_right_of':
-        #             element=S(value,to_right_of=local[direction])
-        #         elif direction=='to_left_of':
-        #             element=S(value,to_left_of=local[direction])
-        return element
-    except Exception as e:
-        print('-------------------->定位不到元素，出错的语句是',value)
-        return value
+class HeliumTool:
+    #helium定位元素
+    @classmethod
+    def s(cls,value:str,**local)->S.web_element:
+        '''
+        定位app中的元素
+        :param value:定位方式对应的值
+        :return: 将元素进行返回
+        '''
+        try:
+            element=S(value)
+            # else:
+            #     for direction in local.keys():
+            #         if direction=='below':
+            #             element=S(value,below=local[direction])
+            #         elif direction=='above':
+            #             element=S(value,above=local[direction])
+            #         elif direction=='to_right_of':
+            #             element=S(value,to_right_of=local[direction])
+            #         elif direction=='to_left_of':
+            #             element=S(value,to_left_of=local[direction])
+            return element
+        except Exception as e:
+            print('-------------------->定位不到元素，出错的语句是',value)
 
-#helium點擊
-def heclick(element):
-    '''
-    在输入框中输入数据
-    :param element: 元素
-    :return:
-    '''
-    try:
-        click(element)
-    except Exception as e:
-        print(f'------------------------->{element}当前元素未获取')
+    #helium點擊
+    @classmethod
+    def heclick(cls,element):
+        '''
+        在输入框中输入数据
+        :param element: 元素
+        '''
+        try:
+            click(element)
+        except Exception as e:
+            print(f'------------------------->{element}当前元素未获取')
 
-#helium輸入
-def hewrite(value,element):
-    '''
-    在输入框中输入数据
-    :param value: 输入值
-    :param element: 元素
-    :return:
-    '''
-    try:
-        write(value,into=element)
-    except Exception as e:
-        print(f'------------------------->{element}当前元素未获取')
+    #helium輸入
+    @classmethod
+    def hewrite(cls,value,element):
+        '''
+        在输入框中输入数据
+        :param value: 输入值
+        :param element: 元素
+        '''
+        try:
+            write(value,into=element)
+        except Exception as e:
+            print(f'------------------------->{element}当前元素未获取')
 
-#helium獲取元素屬性
-def get_ele_attribute(element,att):
-    try:
-        if att=='text':
-            return element.web_element.text
+    #helium獲取元素屬性
+    @classmethod
+    def get_ele_attribute(cls,element,att):
+        '''
+        获取元素的属性
+        :param element:要获取属性的元素
+        :param element:要获取的属性
+        :return:获取属性的值
+        '''
+        try:
+            if att=='text':
+                return element.web_element.text
+            else:
+                return element.web_element.get_attribute(att)
+        except Exception as e:
+            print(f'------------------------->{element}当前元素未获取')
+
+    #helium悬浮
+    @classmethod
+    def hehover(cls,element):
+        '''
+        helium鼠标悬浮
+        :param element:要悬浮的属性
+        '''
+        try:
+            hover(element)
+        except Exception as e:
+            print(f'------------------------->{element}当前元素未获取')
+
+# selenium和appium处理
+class SeleniumTool:
+    def get_single_element(cls,driver,style,value):
+        '''
+        定位app中的元素
+        :param driver: appium操作句柄
+        :param style: 定位元素的方式
+        :param value:方式对应的值
+        :return: 将元素进行返回
+        '''
+
+        try:
+            element = WebDriverWait(driver,10).until(lambda x:x.find_element(style,value))
+            return element
+        except Exception as e:
+            print('-------------------->定位不到元素，出错的语句是',value)
+            element = None
+            return element
+
+    def get_elements(cls,driver,style,value):
+        '''
+        获取多个元素
+        :param driver:
+        :param style:
+        :param value:
+        :return: 返回的是多个元素组成的列表
+        '''
+        try:
+            element = WebDriverWait(driver,10).until(lambda x:x.find_elements(style,value))
+            return element
+        except Exception as e:
+            print('-------------------->定位不到元素，出错的语句是',value)
+            element = None
+            return element
+
+
+    def input_text(cls,element,data):
+        '''
+        在输入框中输入数据
+        :param element: 元素
+        :param data: 数据
+        '''
+        if element:
+            element.clear()
+            element.send_keys(data)
         else:
-            return element.web_element.get_attribute(att)
-    except Exception as e:
-        print(f'------------------------->{element}当前元素未获取')
-
-#helium悬浮
-def hehover(element):
-    try:
-        hover(element)
-    except Exception as e:
-        print(f'------------------------->{element}当前元素未获取')
-
-# selenium处理
-def get_single_element(driver,style,value):
-    '''
-    定位app中的元素
-    :param driver: appium操作句柄
-    :param style: 定位元素的方式
-    :param value:方式对应的值
-    :return: 将元素进行返回
-    '''
-
-    try:
-        element = WebDriverWait(driver,10).until(lambda x:x.find_element(style,value))
-        return element
-    except Exception as e:
-        print('-------------------->定位不到元素，出错的语句是',value)
-        element = None
-        return element
-
-def get_elements(driver,style,value):
-    '''
-    获取多个元素
-    :param driver:
-    :param style:
-    :param value:
-    :return: 返回的是多个元素组成的列表
-    '''
-    try:
-        element = WebDriverWait(driver,10).until(lambda x:x.find_elements(style,value))
-        return element
-    except Exception as e:
-        print('-------------------->定位不到元素，出错的语句是',value)
-        element = None
-        return element
+            print('------------------------->当前元素未获取')
 
 
-def input_text(element,data):
-    '''
-    在输入框中输入数据
-    :param element: 元素
-    :param data: 数据
-    :return:
-    '''
-    if element:
-        element.clear()
-        element.send_keys(data)
-    else:
-        print('------------------------->当前元素未获取')
+    def click_element(cls,element):
+        '''
+        点击元素
+        :param element: 元素
+        '''
+        if element:
+            element.click()
+        else:
+            print('------------------------->当前元素未获取')
 
-
-def click_element(element):
-    if element:
-        element.click()
-    else:
-        print('------------------------->当前元素未获取')
-
-def back_prepage(driver):
-    element = get_single_element(driver,By.XPATH,"//*[@content-desc='转到上一层级']")
-    if element:
-        element.click()
-
-    else:
-        print('----------->返回上一页失败，返回键定位不到')
-
-
-# 滑动
-def handler_swipe(driver,start_x,start_y,end_x,end_y):
-    driver.swipe(start_x,start_y,end_x,end_y)
-
-
-
-# 高级手势操作
+# app高级手势操作
 class HandAction:
+    def back_prepage(driver):
+        '''
+        返回上一级
+        :param driver: driver
+        '''
+        element = SeleniumTool.get_single_element(driver,By.XPATH,"//*[@content-desc='转到上一层级']")
+        if element:
+            element.click()
+
+        else:
+            print('----------->返回上一页失败，返回键定位不到')
+
+    # app滑动
+    def handler_swipe(driver,start_x,start_y,end_x,end_y):
+        driver.swipe(start_x,start_y,end_x,end_y)
     # 长按
     @classmethod
     def handler_long_press(cls,location_x,location_y,press_time=1000):
@@ -279,7 +313,7 @@ class HandAction:
             page = driver.page_source  # 记录查找前的页面资源,通过对比页面资源来退出死循环
             try:
                 # 如果有找到对应的元素那么点击并返回
-                get_single_element(driver,style,value)
+                SeleniumTool.get_single_element(driver,style,value)
                 return True
             except Exception as e:
                 print("没有找到该元素！")
@@ -401,7 +435,7 @@ def toast_info_pic(pic_path,left, upper, right, lower):
         return text.strip()
 
 def toast_info(driver,pic_path,left, upper, right, lower):
-    common_login_element = get_single_element(driver, By.XPATH, "//android.widget.Toast")
+    common_login_element = SeleniumTool.get_single_element(driver, By.XPATH, "//android.widget.Toast")
     if common_login_element:
         return common_login_element.text
     else:
