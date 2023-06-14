@@ -247,7 +247,7 @@ class SeleniumTool:
         else:
             print('------------------------->当前元素未获取')
 
-# app高级手势操作
+# app1高级手势操作
 
 
 class HandAction:
