@@ -52,7 +52,6 @@ class AppDriverTool:
             cls._driver.quit()
             cls._driver = None
 
-
 class DriverTool:
     # 网页操作driver
     driver = None
@@ -105,8 +104,6 @@ class DriverTool:
             cls.driver = None
 
 # helium处理
-
-
 class HeliumTool:
     # helium定位元素
     @classmethod
@@ -187,8 +184,6 @@ class HeliumTool:
             print(f'------------------------->{element}当前元素未获取')
 
 # selenium和appium处理
-
-
 class SeleniumTool:
     def get_single_element(cls, driver, style, value):
         '''
@@ -247,13 +242,12 @@ class SeleniumTool:
         else:
             print('------------------------->当前元素未获取')
 
-# app1高级手势操作
-
-
+# app高级手势操作
 class HandAction:
-    def back_prepage(driver):
+    @classmethod
+    def back_prepage(cls,driver):
         '''
-        返回上一级
+        app返回上一级
         :param driver: driver
         '''
         element = SeleniumTool.get_single_element(
@@ -264,57 +258,88 @@ class HandAction:
         else:
             print('----------->返回上一页失败，返回键定位不到')
 
-    # app滑动
-    def handler_swipe(driver, start_x, start_y, end_x, end_y):
-        driver.swipe(start_x, start_y, end_x, end_y)
-    # 长按
-
+    # app滑动,appium-python-client2.0后停用swipe
+    # @classmethod
+    # def handler_swipe(cls,driver, start_x, start_y, end_x, end_y,duration):
+    #     '''
+    #     app滑动
+    #     :param driver:driver
+    #     :param start_X: 起始位置
+    #     :param start_y:起始位置
+    #     :param end_x:结束位置
+    #     :param end_y:结束位置
+    #     :param duration:滑动时间/毫秒
+    #     '''
+    #     driver.swipe(start_x, start_y, end_x, end_y,duration)
+        
+    # app长按
     @classmethod
-    def handler_long_press(cls, location_x, location_y, press_time=1000):
+    def handler_long_press(cls, driver, location_x=None, location_y=None, element=None, press_time=1000):
         '''
         长按操作
-        :param location_x: 元素的坐标  x
-        :param location_y: 元素的坐标  y
-        :param press_time: 长按的事件，毫秒,默认是1000
-        :return:None
+        :param driver: driver对象
+        :param location_x: 元素的横坐标
+        :param location_y: 元素的纵坐标
+        :param element: 要操作的元素
+        :param press_time: 长按的时间，毫秒，默认是1000
         '''
-        ta = TouchAction(AppDriverTool.get_driver())
-        ta.long_press(x=location_x, y=location_y,
-                      duration=press_time).perform()
-        # ta.press(x=150, y=330).wait(1000).release().perform()
-
+        action = TouchAction(driver)
+        if element:
+            action.long_press(element=element, duration=press_time).release().perform()
+        elif location_x is not None and location_y is not None:
+            action.long_press(x=location_x, y=location_y, duration=press_time).release().perform()
+        else:
+            raise ValueError("请提供元素或位置坐标")
+    
     # 轻敲
-
     @classmethod
-    def handler_tap(cls, location_x, location_y):
+    def handler_tap(cls, driver,element=None, location_x=None, location_y=None):
         '''
         轻敲操作
+        :param driver: driver
         :param location_x: 元素的位置 x
         :param location_y: 元素的位置 y
-        :return:
+        :param element: 元素对象
         '''
-        ta = TouchAction(AppDriverTool.get_driver())
-        ta.tap(x=location_x, y=location_y).perform()
+        action =  TouchAction(driver)
+        if element:
+            action.tap(element).perform()
+        elif location_x and location_y:
+            action.tap(x=location_x, y=location_y).perform()
+        else:
+            raise ValueError("请提供元素或位置坐标")
 
     # 长按移动
-
     @classmethod
-    def handler_pressmove(cls, start_x, start_y, target_x, target_y):
-        ta = TouchAction(AppDriverTool.get_driver())
-        ta.press(x=start_x, y=start_y).move_to(
-            x=target_x, y=target_y).release().perform()
+    def handler_pressmove(cls, driver,target_x, target_y,element=None,start_x=None, start_y=None, ):
+        '''
+        :param driver:driver
+        :param element:元素对象
+        :param start_x:起始位置
+        :param start_y:起始位置
+        :param target_x:结束位置
+        :param target_y:结束位置
+        '''
+        action = TouchAction(driver)
+        if element:
+            action.press(element).move_to(
+                x=target_x, y=target_y).release().perform()
+        elif start_x and start_y:
+            action.press(x=start_x, y=start_y).move_to(
+                x=target_x, y=target_y).release().perform()
+        else:
+            raise ValueError("请提供要移动的元素或位置坐标")
 
     # 一边滑动，一遍寻找目标元素
     @classmethod
-    def swipe_find_element(cls, element, style, value):
+    def swipe_find_element(cls,driver, element, style, value,direction='x'):
         '''
         对于元素的滑动寻找
-        :param element: 元素
+        :param element: 容器元素
         :param style: 定位方法
         :param value: 定位规则
         :return:
         '''
-        driver = AppDriverTool.get_driver()
         ele_size = element.size  # 获取元素大小
         width = ele_size["width"]  # 获取元素的宽度
         height = ele_size["height"]  # 获取元素的高度
@@ -322,24 +347,32 @@ class HandAction:
         ele_position = element.location
         x = ele_position["x"]  # 获取左上角点的x坐标值
         y = ele_position["y"]  # 获取左上角点的y坐标值
-
-        start_x = x + width * 0.9  # 获取的是起始点X的值
-        y = y + height * 0.5  # 获取的是起始及终止点的Y的值
-        end_x = x + width * 0.1  # 获取的是终止点X的值
+        if direction=='x':
+            start_x = x + width * 0.9  # 获取的是起始点X的值
+            start_y,end_y = y + height * 0.5  # 获取的是起始及终止点的Y的值
+            end_x = x + width * 0.1  # 获取的是终止点X的值
+        elif direction=='y':
+            start_y = y + height * 0.9  # 获取的是起始点X的值
+            start_x,end_x = x + width * 0.5  # 获取的是起始及终止点的Y的值
+            end_y = y + height * 0.1  # 获取的是终止点X的值
+        else:
+            raise ValueError("请提供正确的滑动方向")
+        i=1
         while True:
             page = driver.page_source  # 记录查找前的页面资源,通过对比页面资源来退出死循环
-            try:
-                # 如果有找到对应的元素那么点击并返回
-                SeleniumTool.get_single_element(driver, style, value)
-                return True
-            except Exception as e:
-                print("没有找到该元素！")
-            # 没有找到元素，那么滑屏后再对比并重新查找
-            driver.swipe(start_x, y, end_x, y, duration=1000)
-            time.sleep(1)
-            if page == driver.page_source:
-                print("滑屏操作完成且没有找到元素信息")
-                return False
+            ele=SeleniumTool.get_single_element(driver, style, value)
+            if ele:
+                return ele
+            else:
+                print(f"第{i}次循环，没有找到该元素！")    
+                # 没有找到元素，那么滑屏后再对比并重新查找
+                action = TouchAction(driver)
+                action.press(start_x, start_y).move_to(end_x, end_y).release().perform()
+                i+=1
+                time.sleep(1)
+                if page == driver.page_source:
+                    print("滑屏操作完成且没有找到元素信息")
+                    return False
 
 
 # 安卓系统操作
@@ -347,9 +380,9 @@ class HandleSys:
 
     # 设置网络
     @classmethod
-    def change_network(cls, ntype=2):
+    def change_network(cls,driver, ntype=2):
         '''
-         | Value (Alias)      | Data | Wifi | Airplane Mode |
+         | Value (Alias)         |数据  | Wifi | 飞行模式       |
             +====================+======+======+===============+
             | 0 (None)           | 0    | 0    | 0             |
             +--------------------+------+------+---------------+
@@ -364,11 +397,11 @@ class HandleSys:
         :param ntype: 网络模式，默认是2
         :return:
         '''
-        AppDriverTool.get_driver().set_network_connection(ntype)
+        driver.set_network_connection(ntype)
 
     # 模拟键盘操作
     @classmethod
-    def system_keys(cls, num):
+    def system_keys(cls,driver,num):
         '''
         模拟系统的操作
         HOME  3
@@ -377,17 +410,20 @@ class HandleSys:
         :param num: 数值可查询，以上是常用的按键
         :return:
         '''
-        AppDriverTool.get_driver().press_keycode(num)
+        driver.press_keycode(num)
 
     # 打开通知栏
     @classmethod
-    def bulletin_board(cls):
-        AppDriverTool.get_driver().open_notifications()
-
+    def bulletin_board(cls,driver):
+        driver.open_notifications()
+    # 封装滑屏操作方法
     @classmethod
-    def handler_swipe(cls, direction, count=1):
-        # 封装滑屏操作方法
-        driver = AppDriverTool.get_driver()
+    def handler_swipe(cls,driver, direction:str, count:int=1):
+        '''
+        :param driver:driver
+        :param direction:滑动方式 top/down/left/right
+        :param count:滑动次数
+        '''
         w = driver.get_window_size()["width"]  # 获取手机屏幕的宽度
         h = driver.get_window_size()["height"]  # 获取手机屏幕的高度
         # w=1080  h=1920
@@ -403,31 +439,29 @@ class HandleSys:
             driver.swipe(*zb, duration=1200)
             time.sleep(1)
 
-
-class JsonTool:
-
-    @classmethod
-    def get_testcase_data(cls, file_path):
-        '''
-        实现读取外部数据，拼接成[(),(),()]
-        :return:  需要将拼接的数据做返回，让测试用例使用
-        '''
-        # 打开文件
-        file = open(file_path, encoding='utf-8')
-        # 读取文件
-        content = file.read()
-        # json.dumps()  # 将python数据类型转换成json字符串
-        content_list = json.loads(content)  # 将字符串还原成原始的列表或者字典
-        data_list = []
-        for item in content_list:
-            data = tuple(item.values())
-            data_list.append(data)
-
-        return data_list
+#json数据处理使用utils的PytestParamData类的data_info方法
+# class JsonTool:
+#     @classmethod
+#     def get_testcase_data(cls, file_path):
+#         '''
+#         实现读取外部数据，拼接成[(),(),()]
+#         :return:  需要将拼接的数据做返回，让测试用例使用
+#         '''
+#         # 打开文件
+#         file = open(file_path, encoding='utf-8')
+#         # 读取文件
+#         content = file.read()
+#         # json.dumps()  # 将python数据类型转换成json字符串
+#         content_list = json.loads(content)  # 将字符串还原成原始的列表或者字典
+#         data_list = []
+#         for item in content_list:
+#             data = tuple(item.values())
+#             data_list.append(data)
+#         return data_list
 
 
 # 获取toast信息
-def toast_info_pic(pic_path, left, upper, right, lower):
+def toast_info(driver, pic_path, left, upper, right, lower):
     '''
     获取toast消息，返回文本内容，配合使用
     :param pic_path: 获取的文件存储名，以png后缀
@@ -437,28 +471,11 @@ def toast_info_pic(pic_path, left, upper, right, lower):
     :param lower: 距离的部分距离底部的距离
     :return: 返回页面上的数字
     '''
-    path = './img/login_toast_png/'+pic_path
-    AppDriverTool.get_driver().get_screenshot_as_file(path)
-    img = Image.open(path)
-    new_img = img.crop((left, upper, right, lower))
-    new_img.save(path)
-
-    # text = pytesseract.image_to_string(Image.open(path), lang='chi_sim')
-    text = ''.join(pytesseract.image_to_string(
-        Image.open(path), lang='chi_sim').split(' '))
-    print('-------------->获取到的字符串是', text)
-    if "!" in text:
-
-        return text.replace('!', '！').strip()
-    else:
-        return text.strip()
-
-
-def toast_info(driver, pic_path, left, upper, right, lower):
-    common_login_element = SeleniumTool.get_single_element(
-        driver, By.XPATH, "//android.widget.Toast")
+    #先通过定位方式找到 Toast 元素，如果找到则直接返回元素的文本内容
+    common_login_element = SeleniumTool.get_single_element(driver, By.XPATH, "//android.widget.Toast")
     if common_login_element:
         return common_login_element.text
+    #找不到就截图并对图片进行识别
     else:
         path = './img/login_toast_png/' + pic_path
         driver.get_screenshot_as_file(path)
@@ -469,7 +486,6 @@ def toast_info(driver, pic_path, left, upper, right, lower):
             Image.open(path), lang='chi_sim').split(' '))
         print('-------------->获取到的字符串是', text)
         if "!" in text:
-
             return text.replace('!', '！').strip()
         else:
             return text.strip()
