@@ -1,0 +1,30 @@
+[
+    {
+        "page": 6798,
+        "limit": 1,
+        "type": "1",
+        "beginDateTime": "2023-04-11 00:02",
+        "name": "超出最大值的查询"
+    },
+    {
+        "page": 6797,
+        "limit": 1,
+        "type": "1",
+        "beginDateTime": "2023-04-11 00:02",
+        "name": "查询最后一位"
+    },
+    {
+        "page": 10,
+        "limit": 5,
+        "type": "1",
+        "beginDateTime": "2023-04-11 00:02",
+        "name": "查询limit为5，page为10的数据"
+    },
+    {
+        "page": 1,
+        "limit": 6797,
+        "type": 2,
+        "beginDateTime": "2023-05-08 00:00",
+        "name": "查询23-5-8 00:00之后的数据"
+    }
+]
