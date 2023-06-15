@@ -1,12 +1,14 @@
 from helium import *
 import time
-import json
 from PIL import Image
 import pytesseract
 from appium import webdriver as appdriver
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from appium.webdriver.common.touch_action import TouchAction
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import sys
 sys.path.append('.')
@@ -28,7 +30,7 @@ class AppDriverTool:
         '''
         if cls._driver is None:
             desired_caps = dict(
-                platformName='Android',  # 平台，是Android还是IOS
+                platformName='Android',  # 平台,是Android还是IOS
                 platformVersion='9',  # 安卓的版本
                 deviceName='emulator-5554',
                 automationName='uiautomator2',
@@ -127,7 +129,7 @@ class HeliumTool:
             #             element=S(value,to_left_of=local[direction])
             return element
         except Exception as e:
-            print('-------------------->定位不到元素，出错的语句是', value)
+            print('-------------------->定位不到元素,出错的语句是', value)
 
     # helium點擊
     @classmethod
@@ -193,13 +195,12 @@ class SeleniumTool:
         :param value:方式对应的值
         :return: 将元素进行返回
         '''
-
         try:
             element = WebDriverWait(driver, 10).until(
                 lambda x: x.find_element(style, value))
             return element
         except Exception as e:
-            print('-------------------->定位不到元素，出错的语句是', value)
+            print('-------------------->定位不到元素,出错的语句是', value)
             element = None
             return element
 
@@ -216,7 +217,7 @@ class SeleniumTool:
                 lambda x: x.find_elements(style, value))
             return element
         except Exception as e:
-            print('-------------------->定位不到元素，出错的语句是', value)
+            print('-------------------->定位不到元素,出错的语句是', value)
             element = None
             return element
 
@@ -241,9 +242,143 @@ class SeleniumTool:
             element.click()
         else:
             print('------------------------->当前元素未获取')
+         
+# 鼠标操作
+class HandleMouseActionTool:
+    def __init__(self,driver):
+        self.action = ActionChains(driver)
+
+    # 右击
+    def right_click(self,element):
+        self.action.context_click(element)
+        self.action.perform()
+    # 双击
+    def twice_click(self,element):
+        self.action.double_click(element)
+        self.action.perform()
+
+    # 拖动
+    def drag_drop(self,source,target):
+        '''
+        :param source:要拖动的元素
+        :param target:目标元素
+        '''
+        self.action.drag_and_drop(source,target).perform()
+
+    # 悬停
+    def move_element(self,element):
+        self.action.move_to_element(element)
+        self.action.perform()   
+
+# 键盘操作
+class HandleKeysTool:
+
+    # 删除键
+    def delete_key(self,element):
+        element.send_keys(Keys.BACK_SPACE)
+
+    # 全选
+    def all_choose(self,element):
+        element.send_keys(Keys.CONTROL,'a')
+
+    # 复制
+    def ctrl_c(self,element):
+        element.send_keys(Keys.CONTROL, 'c')
+
+    # 粘贴
+    def ctrl_v(self,element):
+        element.send_keys(Keys.CONTROL, 'v')
+    # 回车
+    def enter(self,element):
+        element.send_keys(Keys.ENTER)
+ 
+#alert/confirm/prompt操作   
+class AlertTool:
+    def __init__(self, driver):
+        self.alert = driver.switch_to.alert
+    #获取alert文本
+    def alert_info(self):
+        return self.alert.text
+    #确认弹窗
+    def alert_accept(self):
+        self.alert.accept()
+    #拒绝弹窗
+    def alert_dismiss(self):
+        self.alert.dismiss()   
+    #在prompt中输入数据
+    def alert_input_info(self,info):
+        '''
+        当前的方法,用于在prompt中输入数据
+        :param info:
+        :return:
+        '''
+        self.alert.send_keys(info)
+
+# 切换frame
+class HandleIframeTool:
+    def __init__(self,driver):
+        self.driver = driver
+
+    # 切入到iframe
+    def switch_iframe(self,element):
+        self.driver.switch_to.frame(element)
+
+    # 切回原始页面
+    def back_page(self):
+        self.driver.switch_to.default_content()
+
+# 切换窗口
+def switch_windows(driver,index:int):
+    '''
+    根据传入的index切换窗口
+    :param index:句柄下标，-1为最新的窗口
+    :return new_handle:返回选定的窗口句柄
+    '''
+    # 获取当前窗口的句柄
+    current_handle = driver.current_window_handle
+    # 获取所有的窗口句柄
+    handle_list = driver.window_handles
+    # 切换
+    driver.switch_to.window(handle_list[index])
+    new_handle = driver.current_window_handle
+    return new_handle
+
+#下拉菜单的选择
+def handle_select(select_element,style,value):
+    '''
+    下拉菜单的选择
+    :param select_element: 通过定位拿到的select对象
+    :param style: 下拉菜单选择方式
+    :param value: 下拉选择框的数据
+    :return: 成功返回1,不成功返回-1
+    '''
+    select = Select(select_element)
+    if style == 'index':
+        # 根据option索引来定位,从0开始
+        select.select_by_index(value)
+    elif style == 'value':
+        # 根据option属性,value来定位
+        select.select_by_value(value)
+    elif style == 'text':
+        # 根据option显示文本来定位
+        select.select_by_visible_text(value)
+    #操作成功返回1,不成功返回0方便做判断
+    else:
+        return 0
+    return 1
+
+# 滚动条向下滚动
+def handle_scroll(driver,num):
+    '''
+    通过执行js代码实现浏览器的滚动条滚动
+    :param num:滚动的像素
+    '''
+    js = f"var q=document.documentElement.scrollTop={num}"
+    # js = "var q=document.getElementById('id').scrollTop={num}".format(num)
+    driver.execute_script(js)
 
 # app高级手势操作
-class HandAction:
+class HandAppActionTool:
     @classmethod
     def back_prepage(cls,driver):
         '''
@@ -256,7 +391,7 @@ class HandAction:
             element.click()
 
         else:
-            print('----------->返回上一页失败，返回键定位不到')
+            print('----------->返回上一页失败,返回键定位不到')
 
     # app滑动,appium-python-client2.0后停用swipe
     # @classmethod
@@ -281,7 +416,7 @@ class HandAction:
         :param location_x: 元素的横坐标
         :param location_y: 元素的纵坐标
         :param element: 要操作的元素
-        :param press_time: 长按的时间，毫秒，默认是1000
+        :param press_time: 长按的时间,毫秒,默认是1000
         '''
         action = TouchAction(driver)
         if element:
@@ -309,11 +444,13 @@ class HandAction:
         else:
             raise ValueError("请提供元素或位置坐标")
 
-    # 长按移动
+    # 长按移动/滑动
     @classmethod
-    def handler_pressmove(cls, driver,target_x, target_y,element=None,start_x=None, start_y=None, ):
+    def handler_pressmove(cls, driver,target_x, target_y,duration=1000,element=None,start_x=None, start_y=None, ):
         '''
+        长按移动,传入要移动的element对象或者坐标,以及要移到的坐标
         :param driver:driver
+        :param duration:长按时间
         :param element:元素对象
         :param start_x:起始位置
         :param start_y:起始位置
@@ -322,15 +459,15 @@ class HandAction:
         '''
         action = TouchAction(driver)
         if element:
-            action.press(element).move_to(
+            action.press(element).wait(duration).move_to(
                 x=target_x, y=target_y).release().perform()
         elif start_x and start_y:
-            action.press(x=start_x, y=start_y).move_to(
+            action.press(x=start_x, y=start_y).wait(duration).move_to(
                 x=target_x, y=target_y).release().perform()
         else:
             raise ValueError("请提供要移动的元素或位置坐标")
 
-    # 一边滑动，一遍寻找目标元素
+    # 一边滑动,一遍寻找目标元素
     @classmethod
     def swipe_find_element(cls,driver, element, style, value,direction='x'):
         '''
@@ -364,8 +501,8 @@ class HandAction:
             if ele:
                 return ele
             else:
-                print(f"第{i}次循环，没有找到该元素！")    
-                # 没有找到元素，那么滑屏后再对比并重新查找
+                print(f"第{i}次循环,没有找到该元素！")    
+                # 没有找到元素,那么滑屏后再对比并重新查找
                 action = TouchAction(driver)
                 action.press(start_x, start_y).move_to(end_x, end_y).release().perform()
                 i+=1
@@ -376,7 +513,7 @@ class HandAction:
 
 
 # 安卓系统操作
-class HandleSys:
+class HandleSysTool:
 
     # 设置网络
     @classmethod
@@ -394,7 +531,7 @@ class HandleSys:
             +--------------------+------+------+---------------+
             | 6 (All network on) | 1    | 1    | 0             |
             +--------------------+------+------+---------------+
-        :param ntype: 网络模式，默认是2
+        :param ntype: 网络模式,默认是2
         :return:
         '''
         driver.set_network_connection(ntype)
@@ -407,7 +544,7 @@ class HandleSys:
         HOME  3
         BACK  4
         ENTER  66
-        :param num: 数值可查询，以上是常用的按键
+        :param num: 数值可查询,以上是常用的按键
         :return:
         '''
         driver.press_keycode(num)
@@ -444,8 +581,8 @@ class HandleSys:
 #     @classmethod
 #     def get_testcase_data(cls, file_path):
 #         '''
-#         实现读取外部数据，拼接成[(),(),()]
-#         :return:  需要将拼接的数据做返回，让测试用例使用
+#         实现读取外部数据,拼接成[(),(),()]
+#         :return:  需要将拼接的数据做返回,让测试用例使用
 #         '''
 #         # 打开文件
 #         file = open(file_path, encoding='utf-8')
@@ -459,81 +596,81 @@ class HandleSys:
 #             data_list.append(data)
 #         return data_list
 
-
-# 获取toast信息
-def toast_info(driver, pic_path, left, upper, right, lower):
-    '''
-    获取toast消息，返回文本内容，配合使用
-    :param pic_path: 获取的文件存储名，以png后缀
-    :param left: 截取的部分距离左边的距离
-    :param upper: 截取的部分距离上边的距离
-    :param right: 截取的部分距离右边的距离
-    :param lower: 距离的部分距离底部的距离
-    :return: 返回页面上的数字
-    '''
-    #先通过定位方式找到 Toast 元素，如果找到则直接返回元素的文本内容
-    common_login_element = SeleniumTool.get_single_element(driver, By.XPATH, "//android.widget.Toast")
-    if common_login_element:
-        return common_login_element.text
-    #找不到就截图并对图片进行识别
-    else:
-        path = './img/login_toast_png/' + pic_path
-        driver.get_screenshot_as_file(path)
-        img = Image.open(path)
-        new_img = img.crop((left, upper, right, lower))
-        new_img.save(path)
-        text = ''.join(pytesseract.image_to_string(
-            Image.open(path), lang='chi_sim').split(' '))
-        print('-------------->获取到的字符串是', text)
-        if "!" in text:
-            return text.replace('!', '！').strip()
+class PicTool:
+    # 获取toast信息
+    def toast_info(driver, pic_path, left, upper, right, lower):
+        '''
+        获取toast消息,返回文本内容,配合使用
+        :param pic_path: 获取的文件存储名,以png后缀
+        :param left: 截取的部分距离左边的距离
+        :param upper: 截取的部分距离上边的距离
+        :param right: 截取的部分距离右边的距离
+        :param lower: 距离的部分距离底部的距离
+        :return: 返回页面上的数字
+        '''
+        #先通过定位方式找到 Toast 元素,如果找到则直接返回元素的文本内容
+        common_login_element = SeleniumTool.get_single_element(driver, By.XPATH, "//android.widget.Toast")
+        if common_login_element:
+            return common_login_element.text
+        #找不到就截图并对图片进行识别
         else:
-            return text.strip()
+            path = './img/login_toast_png/' + pic_path
+            driver.get_screenshot_as_file(path)
+            img = Image.open(path)
+            new_img = img.crop((left, upper, right, lower))
+            new_img.save(path)
+            text = ''.join(pytesseract.image_to_string(
+                Image.open(path), lang='chi_sim').split(' '))
+            print('-------------->获取到的字符串是', text)
+            if "!" in text:
+                return text.replace('!', '！').strip()
+            else:
+                return text.strip()
 
+    # 识别selenium的截图
+    def get_target_pic(xmin: int, ymin: int, xmax: int, ymax: int, img_path: str, new_img_path: str, driver: object):
+        '''
+        当前函数用于使用selenium截图页面,进行截图使用
+        :param xmin: 裁剪位置
+        :param ymin: 裁剪位置
+        :param xmax: 裁剪位置
+        :param ymax: 裁剪位置
+        :param img_path: 存储截图的路径
+        :param new_img_path: 裁剪的图片的路径
+        :return: 返回截取的图片所在的路径
+        '''
 
-def get_target_pic(xmin: int, ymin: int, xmax: int, ymax: int, img_path: str, new_img_path: str, driver: object):
-    '''
-    当前函数用于使用selenium截图页面，进行截图使用
-    :param xmin: 裁剪位置
-    :param ymin: 裁剪位置
-    :param xmax: 裁剪位置
-    :param ymax: 裁剪位置
-    :param img_path: 存储截图的路径
-    :param new_img_path: 裁剪的图片的路径
-    :return: 返回截取的图片所在的路径
-    '''
+        from PIL import Image
 
-    from PIL import Image
+        driver.get_screenshot_as_file(img_path)
 
-    driver.get_screenshot_as_file(img_path)
+        im = Image.open(img_path)  # 用PIL打开一个图片
+        box = (xmin, ymin, xmax, ymax)  # box代表需要剪切图片的位置格式为:xmin ymin xmax ymax
+        ng = im.crop(box)  # 对im进行裁剪 保存为ng(这里im保持不变)
+        ng.save(new_img_path)
+        return new_img_path
 
-    im = Image.open(img_path)  # 用PIL打开一个图片
-    box = (xmin, ymin, xmax, ymax)  # box代表需要剪切图片的位置格式为:xmin ymin xmax ymax
-    ng = im.crop(box)  # 对im进行裁剪 保存为ng(这里im保持不变)
-    ng.save(new_img_path)
-    return new_img_path
+    #获取图片上的中文
+    def pic_img(pic_path: str):
+        '''
+        获取图片上的中文
+        :param pic_path: 图片路径
+        :return: 返回图片上的文字
+        '''
+        from PIL import Image
+        import pytesseract
 
+        # 读取图片
+        image_obj = Image.open(pic_path)
 
-def pic_img(pic_path: str):
-    '''
-    获取图片上的中文
-    :param pic_path: 图片路径
-    :return: 返回图片上的文字
-    '''
-    from PIL import Image
-    import pytesseract
+        text = pytesseract.image_to_string(image_obj, lang='chi_sim')
+        return text
 
-    # 读取图片
-    image_obj = Image.open(pic_path)
-
-    text = pytesseract.image_to_string(image_obj, lang='chi_sim')
-    return text
-
-
+#创建logger
 def create_logger(log_name):
     '''
     当前的函数完成的功能
-    添加日志文件，输出文件到控制台
+    添加日志文件,输出文件到控制台
     :param log_name: 文件的名字
     :return: 日志操作句柄
     '''
@@ -541,29 +678,45 @@ def create_logger(log_name):
     import os
     from logging.handlers import RotatingFileHandler
 
-    # 日志
+    # 当前文件父目录
     path = os.path.dirname(os.path.abspath(__name__))
-    project_path = os.path.dirname(path)
-
-    log_path = os.path.join(project_path, 'log')
-
+    #根目录
+    path = os.path.dirname(path)
+    #根目录下log目录
+    log_path = os.path.join(path, 'log')
+    #创建日志记录器
     logger = logging.getLogger(log_name)
     logger.setLevel('INFO')
-    fmt = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s(%(funcName)s:%(lineno)d)] - % (message)s'
+    #创建日志格式化器
+    #%(levelno)s: 打印日志级别的数值
+    # %(levelname)s: 打印日志级别名称
+    # %(pathname)s: 打印当前执行程序的路径,其实就是sys.argv[0]
+    # %(filename)s: 打印当前执行程序名
+    # %(funcName)s: 打印日志的当前函数
+    # %(lineno)d: 打印日志的当前行号
+    # %(asctime)s: 打印日志的时间
+    # %(thread)d: 打印线程ID
+    # %(threadName)s: 打印线程名称
+    # %(process)d: 打印进程ID
+    # %(message)s: 打印日志信息
+    # %(name)s: 打印log文件名
+    # %(lineno)d: 该log由第几行打印
+    fmt = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s(%(funcName)s:%(lineno)d)] - %(message)s'
     log_formate = logging.Formatter(fmt)
-
     # 日志写入路径
     file_name = os.path.join(log_path, log_name)
-
+    
+    # 创建文件日志处理器
     file_handler = RotatingFileHandler(
         file_name, maxBytes=20*1024*1024, backupCount=10, encoding='utf-8')
     file_handler.setLevel('INFO')
-    file_handler.setFormatter(log_formate)
-
+    # 创建流日志处理器,也就是在控制台输出
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel('INFO')
+    # 设置处理器的日志格式化器
+    file_handler.setFormatter(log_formate)
     stream_handler.setFormatter(log_formate)
-
+    # 将流日志处理器和文件日志处理器添加到日志记录器
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 

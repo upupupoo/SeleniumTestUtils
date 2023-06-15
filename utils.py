@@ -9,22 +9,23 @@ from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler, SMTP
 import config
 
 class FilePath(object):
-
     @classmethod
     def current_file_path(cls):
         '''
         当前的方法，返回的是文件的位置
         :return:
         '''
+        #__file__为当前文件路径
+        #os.path.realpath 返回绝对路径
         return os.path.realpath(__file__)
 
     @classmethod
     def current_file_dir(cls):
         '''
         返回的当前文件所在的目录
-
         :return:
         '''
+        #os.path.dirname获取当前文件的父目录
         dir_path = os.path.dirname(cls.current_file_path())
         return dir_path
 
@@ -39,7 +40,6 @@ class FilePath(object):
         return path
 
 class HandlerJson(object):
-
     @classmethod
     def write_json(cls,json_path,data):
         '''
@@ -51,7 +51,6 @@ class HandlerJson(object):
         f2 = open(json_path, 'w', encoding='utf-8')
         # 将python数据类型转换为json
         json.dump(data, f2, ensure_ascii=False)  # ensure_ascii=False代表中文不转义
-
 
     @classmethod
     def read_json(cls,json_path):
@@ -99,7 +98,7 @@ class HandlerMysql(object):
             return 'success'
 
     @classmethod
-    def retrieve(cls,cur,sql,count=-1):
+    def retrieve(cls,cur,sql,count:int=-1):
         '''
         当前的方法用于返回数据
         :param cur: 操作句柄
@@ -110,12 +109,13 @@ class HandlerMysql(object):
         cur.execute(sql)
 
         if isinstance(count,int):
+            #结果全部返回
             if count == -1:
                 return cur.fetchall()
-
+            #只返回第一行
             elif count == 1:
                 return cur.fetchone()
-
+            #返回指定行数的数据
             else:
                 return cur.fetchmany(count)
         else:
