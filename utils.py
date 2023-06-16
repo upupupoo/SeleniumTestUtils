@@ -2,12 +2,11 @@ import os
 import json
 import pymysql
 from requests import request
-import requests
 import logging
-from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler, SMTPHandler
+from logging.handlers import RotatingFileHandler
+import ddddocr
 
-import config
-
+#寻找文件路径
 class FilePath(object):
     @classmethod
     def current_file_path(cls):
@@ -39,6 +38,7 @@ class FilePath(object):
         path = os.path.join(*args)
         return path
 
+#操作json
 class HandlerJson(object):
     @classmethod
     def write_json(cls,json_path,data):
@@ -64,6 +64,7 @@ class HandlerJson(object):
         data = json.load(file)
         return data
 
+# 操作mysql
 class HandlerMysql(object):
 
     @classmethod
@@ -98,7 +99,7 @@ class HandlerMysql(object):
             return 'success'
 
     @classmethod
-    def retrieve(cls,cur,sql,count:int=-1):
+    def select(cls,cur,sql,count:int=-1):
         '''
         当前的方法用于返回数据
         :param cur: 操作句柄
@@ -155,7 +156,7 @@ class HandlerMysql(object):
         else:
             return 'success'
 
-
+#这是一个使用 requests 库进行 HTTP 请求的封装类 RequestProxy，它提供了常见的 HTTP 请求方法，包括 GET、POST、PUT、PATCH、DELETE 等。
 class RequestProxy(object):
 
     headers = {
@@ -164,26 +165,27 @@ class RequestProxy(object):
 
     @classmethod
     def get(cls,url, params=None,headers=None,**kwargs):
-        r"""Sends a GET request.
-
-        :param url: URL for the new :class:`Request` object.
-        :param params: (optional) Dictionary, list of tuples or bytes to send
-            in the query string for the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
-        :return: :class:`Response <Response>` object
-        :rtype: requests.Response
         """
+        发送 GET 请求。
+        :param url: 新的 `Request` 对象的 URL。
+        :param params: (可选) 用于发送查询字符串的字典、元组列表或字节。
+        :param **kwargs: `request` 方法可接受的可选参数。
+        :return:`Response` 对象
+        """
+        #是否允许重定向
         kwargs.setdefault('allow_redirects', True)
+        #更新请求头
         kwargs.update({"headers":cls.headers})
         return request('get', url, params=params ,**kwargs)
 
+    #查询服务器支持的请求方法、头部信息、认证要求等
     @classmethod
-    def options(cls,url, **kwargs):
-        r"""Sends an OPTIONS request.
-
-        :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
-        :return: :class:`Response <Response>` object
+    def option(cls,url, **kwargs):
+        """
+        发送 OPTIONS 请求。
+        :param url: 新的 `Request` 对象的 URL。
+        :param **kwargs: `request` 方法可接受的可选参数。
+        :return: :class:`Response` 对象
         :rtype: requests.Response
         """
 
@@ -193,14 +195,12 @@ class RequestProxy(object):
 
     @classmethod
     def head(cls,url, **kwargs):
-        r"""Sends a HEAD request.
+        """
+        发送 HEAD 请求。
 
-        :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes. If
-            `allow_redirects` is not provided, it will be set to `False` (as
-            opposed to the default :meth:`request` behavior).
-        :return: :class:`Response <Response>` object
-        :rtype: requests.Response
+        :param url: 新的 `Request` 对象的 URL。
+        :param **kwargs: `request` 方法可接受的可选参数。如果未提供 `allow_redirects` 参数，将被设置为 `False`（与 `request` 的默认行为相反）。
+        :return:`Response` 对象e
         """
 
         kwargs.setdefault('allow_redirects', False)
@@ -209,56 +209,46 @@ class RequestProxy(object):
 
     @classmethod
     def post(cls,url, data=None, json=None, **kwargs):
-        r"""Sends a POST request.
-
-        :param url: URL for the new :class:`Request` object.
-        :param data: (optional) Dictionary, list of tuples, bytes, or file-like
-            object to send in the body of the :class:`Request`.
-        :param json: (optional) json data to send in the body of the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
-        :return: :class:`Response <Response>` object
-        :rtype: requests.Response
-        """
+        '''
+        :param url: 新的 :class:`Request` 对象的 URL。
+        :param data: （可选）要发送到 :class:`Request` 的请求体中的字典、元组列表、字节或类似文件的对象。
+        :param json: （可选）要发送到 :class:`Request` 的请求体中的 JSON 数据。
+        :param \*\*kwargs: ``request`` 接受的可选参数。
+        :return:`Response <Response>` 对象
+        '''
         kwargs.update({"headers": cls.headers})
         return request('post', url, data=data, json=json, **kwargs)
 
     @classmethod
     def put(cls,url, data=None, **kwargs):
-        r"""Sends a PUT request.
-
-        :param url: URL for the new :class:`Request` object.
-        :param data: (optional) Dictionary, list of tuples, bytes, or file-like
-            object to send in the body of the :class:`Request`.
-        :param json: (optional) json data to send in the body of the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
-        :return: :class:`Response <Response>` object
-        :rtype: requests.Response
+        """
+        :param url: 新的 :class:`Request` 对象的 URL。
+        :param data: （可选）要发送到 :class:`Request` 的请求体中的字典、元组列表、字节或类似文件的对象。
+        :param json: （可选）要发送到 :class:`Request` 的请求体中的 JSON 数据。
+        :param \*\*kwargs: ``request`` 接受的可选参数。
+        :return:`Response <Response>` 对象
         """
         kwargs.update({"headers": cls.headers})
         return request('put', url, data=data, **kwargs)
 
     @classmethod
     def patch(cls,url, data=None, **kwargs):
-        r"""Sends a PATCH request.
-
-        :param url: URL for the new :class:`Request` object.
-        :param data: (optional) Dictionary, list of tuples, bytes, or file-like
-            object to send in the body of the :class:`Request`.
-        :param json: (optional) json data to send in the body of the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
-        :return: :class:`Response <Response>` object
-        :rtype: requests.Response
+        """
+        :param url: 新的 :class:`Request` 对象的 URL。
+        :param data: （可选）要发送到 :class:`Request` 的请求体中的字典、元组列表、字节或类似文件的对象。
+        :param json: （可选）要发送到 :class:`Request` 的请求体中的 JSON 数据。
+        :param \*\*kwargs: 可选参数，将传递给 ``request`` 方法。
+        :return:`Response <Response>` 对象
         """
         kwargs.update({"headers": cls.headers})
         return request('patch', url, data=data, **kwargs)
 
     @classmethod
     def delete(cls,url, **kwargs):
-        r"""Sends a DELETE request.
-
-        :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
-        :return: :class:`Response <Response>` object
+        """    
+        :param url: 新的 :class:`Request` 对象的 URL。
+        :param \*\*kwargs: 可选参数，将传递给 ``request`` 方法。
+        :return: :class:`Response <Response>` 对象
         :rtype: requests.Response
         """
         kwargs.update({"headers": cls.headers})
@@ -268,11 +258,14 @@ class RequestProxy(object):
 class PytestParamData():
     #抽取json的前i列数据
     @classmethod
-    def data_info(cls,json_path,i=None):
+    def data_json(cls,json_path,i=None):
+        '''
+        传入i将每行前i列数据装在list中，不会进行注释处理
+        如果不传入i则默认将key为'name'的列识别成数据的注释
+        '''
         data = HandlerJson.read_json(json_path)
         param_data_list = []
         if i:
-            print('*' * 50)
             for item in data:
                 each_data = tuple(item.values())[0:i]
                 param_data_list.append(each_data)
@@ -282,60 +275,137 @@ class PytestParamData():
                 param_data_list.append([item.get('name'), idata])
 
         return param_data_list
-
-class HandlerCsv(object):
     @classmethod
-    def read_csv(cls,csv_path,i):
-        f = open(csv_path, encoding='utf-8')
-        line_list = f.readlines()[1:]
-        data_list = []
-        for item in line_list:
-            data_list.append(item.split(',')[0:i])
-        f.close()
-        data = []
-        ids=[]
-        for i in data_list:
-            data.append(i[:-1])
-            ids.append(i[-1])
-        print(f'data={data},ids={ids}')
-        return data,ids
-    
+    def data_csv(cls,csv_path,i,annotation:int=1):
+        '''
+        对csv数据进行测试数据的参数化抽取，csv最后一列需为该行数据的注释
+        :param csv_path:csv文件路径
+        :param i:取csv的i列数据
+        :param annotation:是否进行注释处理,1是 0否
+        :return data:参数化数据
+        :return ids:数据的注释
+        '''
+        with open(csv_path,encoding='utf-8') as f:
+            #去除首行
+            line_list = f.readlines()[1:]
+        data_list = [[field.rstrip('\n') for field in line.split(',')[:i]] for line in line_list]
+        
+        if annotation:
+            #前i-1列为数据，装在一个list中
+            #最后一列为该行数据的注释，所有注释在一个list中
+            data_list = [[i[-1], i[:-1]] for i in data_list]
+        return data_list
 
+#创建logger
 class LoggerHandler(object):
 
     @classmethod
-    def create_logger(cls,log_name):
-        log_path = os.path.join(config.BASE_DIR, 'log',log_name)
+    def create_logger(log_name):
+        '''
+        当前的函数完成的功能
+        添加日志文件,输出文件到控制台
+        :param log_name: 文件的名字
+        :return: 日志操作句柄
+        '''
+        
 
-        # 设置的日志器
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-
-        # 定义格式器
-        fmt_str = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s(%(funcName)s:%(lineno)d)] - %(message)s'
-        log_format = logging.Formatter(fmt=fmt_str)
-
-        # 定义写入终端处理器
-        stream_handler = logging.StreamHandler()  # 终端
-        stream_handler.setFormatter(log_format)
-
-        # 写入到日志文件的处理器
-        file_handler = RotatingFileHandler(log_path,maxBytes=1024*1024,backupCount=20,encoding='utf-8')  # 理论上文件可以无限增长
-        file_handler.setFormatter(log_format)
-
-        # 将处理器和日志器进行关联
-        logger.addHandler(stream_handler)
+        # 当前文件父目录
+        path = os.path.dirname(os.path.abspath(__name__))
+        #根目录
+        path = os.path.dirname(path)
+        #根目录下log目录
+        log_path = os.path.join(path, 'log')
+        #创建日志记录器
+        logger = logging.getLogger(log_name)
+        logger.setLevel('INFO')
+        #创建日志格式化器
+        #%(levelno)s: 打印日志级别的数值
+        # %(levelname)s: 打印日志级别名称
+        # %(pathname)s: 打印当前执行程序的路径,其实就是sys.argv[0]
+        # %(filename)s: 打印当前执行程序名
+        # %(funcName)s: 打印日志的当前函数
+        # %(lineno)d: 打印日志的当前行号
+        # %(asctime)s: 打印日志的时间
+        # %(thread)d: 打印线程ID
+        # %(threadName)s: 打印线程名称
+        # %(process)d: 打印进程ID
+        # %(message)s: 打印日志信息
+        # %(name)s: 打印log文件名
+        # %(lineno)d: 该log由第几行打印
+        fmt = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s(%(funcName)s:%(lineno)d)] - %(message)s'
+        log_formate = logging.Formatter(fmt)
+        # 日志写入路径
+        file_name = os.path.join(log_path, log_name)
+        
+        # 创建文件日志处理器
+        file_handler = RotatingFileHandler(
+            file_name, maxBytes=20*1024*1024, backupCount=10, encoding='utf-8')
+        file_handler.setLevel('INFO')
+        # 创建流日志处理器,也就是在控制台输出
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel('INFO')
+        # 设置处理器的日志格式化器
+        file_handler.setFormatter(log_formate)
+        stream_handler.setFormatter(log_formate)
+        # 将流日志处理器和文件日志处理器添加到日志记录器
         logger.addHandler(file_handler)
+        logger.addHandler(stream_handler)
 
         return logger
 
+#md5加密
+def md5_util(key:str,style:str='lower',count:int=32)->str:
+    '''
+    md5加密
+    :param key: 要加密的数据
+    :param style:加密后的数据大小写
+    :param count:加密的位数
+    :return: 加密后的md5值
+    '''
+    import hashlib
+    target_str = hashlib.md5()
+    target_str.update(key.encode("utf-8"))
 
+    if style == 'upper' and count == 32:
+        return (target_str.hexdigest()).upper()
+    elif style == 'lower' and count == 32:
+        return (target_str.hexdigest()).lower()
 
-if __name__ == '__main__':
-    log_path = os.path.join(config.BASE_DIR,'log','log1.log')
-    log = LoggerHandler.create_logger(log_path)
-    log.info('这是信息')
-    log.error('这是信息')
+    elif style == 'upper' and count == 16:
+        return (target_str.hexdigest())[8:-8].upper()
+
+    elif style == 'lower' and count == 16:
+        return (target_str.hexdigest())[8:-8].lower()
+    else:
+        return None
+
+#图片验证码处理
+def get_code(session,url,type=0):
+    '''
+    图片验证码处理，注意修改验证码保存路径
+    :param req:session对象
+    :param url:请求的验证码url
+    :param type:0 自动识别,1 保存图片到本地手动识别
+    :return code:识别的验证码
+    '''
+    ocr = ddddocr.DdddOcr()
+    code=session.get(url)
+    
+    
+    code = ocr.classification(code.content)
+    #可对识别不准确的验证码二次处理
+    # res=res.replace('日','8',4).replace('口','0',4).replace('己','2',4).replace('d','0',4)
+    if type:
+        #将验证码保存到指定目录，手动识别
+        with open('data/code.jpg', 'wb') as f:
+            f.write(code.content)
+        code=input('输入验证码：')
+    return code
+# if __name__ == '__main__':
+#     log_path = os.path.join(config.BASE_DIR,'log','log1.log')
+#     log = LoggerHandler.create_logger(log_path)
+#     log.info('这是信息')
+#     log.error('这是信息')
     # # todo 1.0拿到操作句柄和连接对象
     # con,cur = HandlerMysql.create_con_cur('127.0.0.1','root','root','dingdong')
     # # todo 2.0 创建sql

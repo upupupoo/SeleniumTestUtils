@@ -639,9 +639,6 @@ class PicTool:
         :param new_img_path: 裁剪的图片的路径
         :return: 返回截取的图片所在的路径
         '''
-
-        from PIL import Image
-
         driver.get_screenshot_as_file(img_path)
 
         im = Image.open(img_path)  # 用PIL打开一个图片
@@ -657,72 +654,13 @@ class PicTool:
         :param pic_path: 图片路径
         :return: 返回图片上的文字
         '''
-        from PIL import Image
-        import pytesseract
-
         # 读取图片
         image_obj = Image.open(pic_path)
 
         text = pytesseract.image_to_string(image_obj, lang='chi_sim')
         return text
 
-#创建logger
-def create_logger(log_name):
-    '''
-    当前的函数完成的功能
-    添加日志文件,输出文件到控制台
-    :param log_name: 文件的名字
-    :return: 日志操作句柄
-    '''
-    import logging
-    import os
-    from logging.handlers import RotatingFileHandler
-
-    # 当前文件父目录
-    path = os.path.dirname(os.path.abspath(__name__))
-    #根目录
-    path = os.path.dirname(path)
-    #根目录下log目录
-    log_path = os.path.join(path, 'log')
-    #创建日志记录器
-    logger = logging.getLogger(log_name)
-    logger.setLevel('INFO')
-    #创建日志格式化器
-    #%(levelno)s: 打印日志级别的数值
-    # %(levelname)s: 打印日志级别名称
-    # %(pathname)s: 打印当前执行程序的路径,其实就是sys.argv[0]
-    # %(filename)s: 打印当前执行程序名
-    # %(funcName)s: 打印日志的当前函数
-    # %(lineno)d: 打印日志的当前行号
-    # %(asctime)s: 打印日志的时间
-    # %(thread)d: 打印线程ID
-    # %(threadName)s: 打印线程名称
-    # %(process)d: 打印进程ID
-    # %(message)s: 打印日志信息
-    # %(name)s: 打印log文件名
-    # %(lineno)d: 该log由第几行打印
-    fmt = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s(%(funcName)s:%(lineno)d)] - %(message)s'
-    log_formate = logging.Formatter(fmt)
-    # 日志写入路径
-    file_name = os.path.join(log_path, log_name)
-    
-    # 创建文件日志处理器
-    file_handler = RotatingFileHandler(
-        file_name, maxBytes=20*1024*1024, backupCount=10, encoding='utf-8')
-    file_handler.setLevel('INFO')
-    # 创建流日志处理器,也就是在控制台输出
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel('INFO')
-    # 设置处理器的日志格式化器
-    file_handler.setFormatter(log_formate)
-    stream_handler.setFormatter(log_formate)
-    # 将流日志处理器和文件日志处理器添加到日志记录器
-    logger.addHandler(file_handler)
-    logger.addHandler(stream_handler)
-
-    return logger
 
 
-if __name__ == '__main__':
-    log = create_logger('case.log')
-    log.info('呵呵呵呵')
+
+
